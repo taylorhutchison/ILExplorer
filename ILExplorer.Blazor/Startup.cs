@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace ILExplorer
+namespace ILExplorer.Blazor
 {
     public class Startup
     {
