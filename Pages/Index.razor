@@ -1,0 +1,77 @@
+﻿@page "/"
+
+<h1>C# Compiler</h1>
+
+<ul>
+@foreach(string name in names) {
+    <li> @name </li>
+}
+</ul>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Compile</button>
+
+@code {
+    int currentCount = 0;
+    List<string> names = new List<string>();
+
+    class UsingCollector : CSharpSyntaxWalker
+    {
+        public readonly List<UsingDirectiveSyntax> Usings = new List<UsingDirectiveSyntax>();
+
+        public override void VisitUsingDirective(UsingDirectiveSyntax node)
+        {
+            if (node.Name.ToString() != "System" &&
+                !node.Name.ToString().StartsWith("System."))
+            {
+                this.Usings.Add(node);
+            }
+        }
+    }
+
+    void IncrementCount()
+    {
+        currentCount++;
+        names = new List<string>();
+        SyntaxTree tree = CSharpSyntaxTree.ParseText(
+        @"using System;
+        using System.Collections.Generic;
+        using System.Linq;
+        using System.Text;
+        using Microsoft.CodeAnalysis;
+        using Microsoft.CodeAnalysis.CSharp;
+        
+        namespace TopLevel
+        {
+            using Microsoft;
+            using System.ComponentModel;
+        
+            namespace Child1
+            {
+                using Microsoft.Win32;
+                using System.Runtime.InteropServices;
+        
+                class Foo { }
+            }
+        
+            namespace Child2
+            {
+                using System.CodeDom;
+                using Microsoft.CSharp;
+        
+                class Bar { }
+            }
+        }");
+ 
+            var root = (CompilationUnitSyntax)tree.GetRoot();
+ 
+            var collector = new UsingCollector();
+            collector.Visit(root);
+ 
+            foreach (var directive in collector.Usings)
+            {
+                names.Add(directive.Name.ToFullString());
+            }
+    }
+
+
+}
